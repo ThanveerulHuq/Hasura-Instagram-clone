@@ -4,8 +4,8 @@ import requests
 import json
 from wtforms import Form, validators, StringField
 
-filestore_url = "https://filestore.helmet94.hasura-app.io/v1/file"
-data_url = "https://data.helmet94.hasura-app.io/v1/query"
+filestore_url = "https://filestore.bearings20.hasura-app.io/v1/file"
+data_url = "https://data.bearings20.hasura-app.io/v1/query"
 filestore_headers = {
    "Authorization": "Bearer 5a021247deb17e3b4e93a4d99f5b0cf09ac0c880d777bec0"
 }
