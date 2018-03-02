@@ -1,0 +1,24 @@
+
+{
+  "expo": {
+    "name": "Instagram (HPDF)",
+    "slug": "HPDF-T45NE1",
+    "icon": "./src/assets/logo.png",
+     
+    "loading": {
+
+      "icon": "./src/assets/logo.png",
+      "backgroundColor":"white" 
+    },
+
+    "privacy": "unlisted",
+    "version": "1.0.0",
+    "sdkVersion": "23.0.0",
+    "ios": {
+      "bundleIdentifier": "com.example.helloHasura"
+    },
+    "android": {
+      "package": "com.example.helloHasura"
+    }
+  }
+}
