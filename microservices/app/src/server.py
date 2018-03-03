@@ -4,86 +4,70 @@ import requests
 import json
 from wtforms import Form, validators, StringField
 
-filestore_url = "https://filestore.bearings20.hasura-app.io/v1/file"
-data_url = "https://data.bearings20.hasura-app.io/v1/query"
-filestore_headers = {
-   "Authorization": "Bearer 5a021247deb17e3b4e93a4d99f5b0cf09ac0c880d777bec0"
-}
-data_headers = {
-   "Content-Type": "application/json"
-}
-allowed_extns =['png','jpeg', 'gif']
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
-class ReusableForm(Form):
-   name = StringField('Name:', validators=[validators.required()])
+
+signup_url = "https://auth.clipping57.hasura-app.io/v1/signup"
+data_url = "https://data.clipping57.hasura-app.io/v1/query"
+auth_headers = {"Content-Type": "application/json"}
+data_headers = {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer f0ce51389aabf2bba1a026551e1c22cb7449ec113d096df8"
+}
 
 @app.route('/')
 def index():
     return "<h1>Hello World - Thanveer</h1>"
 
-
-@app.route('/authors')
-def authors():
-    allposts = requests.get("https://jsonplaceholder.typicode.com/posts")
-    postsJson = allposts.json()
-    authorposts = {}
-    for post in postsJson:
-        userid = post["userId"]
-        if userid in authorposts:
-            authorposts[userid] = authorposts[userid]+ 1
-        else:
-            authorposts[userid] = 1
-    allUsers = requests.get("https://jsonplaceholder.typicode.com/users")
-    usersJson = allUsers.json()
-    usernames = {}
-    for usr in usersJson:
-        usernames[usr["id"]] = usr["name"]
-    authorswithcount = "<h3> Author<span style='margin-left: 40px;'>count</span></h3>"
-    for key, value in authorposts.items():
-        authorswithcount += '<p>' + usernames[key] + '      ' + str(authorposts[key]) + '</p>'
-    return authorswithcount
-
-
-@app.route('/setcookie')
-def cookie_insertion():
-    name = request.cookies.get('name')
-    age = request.cookies.get('age')
-    resp = make_response()
-    if name is None:
-        resp.set_cookie('name', 'thanveer')
-    if age is None:
-        resp.set_cookie('age', '23')
-    return resp
-
-
-@app.route('/getcookies')
-def get_cookie():
-    name = request.cookies.get('name')
-    age = request.cookies.get('age')
-    if name is not None and age is not None:
-        return name + " " + age
+@app.route('/signup',methods = ['GET', 'POST'])
+def signup():
+    request_json = request.get_json(silent=True)    
+    res= add_user_data(request_json)
+    if('error' in res):
+        return jsonify(error=res['error'])
     else:
-        return "<h5>No cookie found<h5>"
+        return jsonify(user=add_user_auth(request_json))
+
+def add_user_data(user):
+    query= {
+        "type": "insert",
+        "args":{
+            "table":"users",
+            "objects":[
+                {"name": user['name'],"user_name": user['user_name'] ,"email_id":user['email_id'],"mobile_no":user['mobile_no'],"age":user['age']}
+            ],
+            "returning":["user_id"]
+        }
+    }
+    resp = requests.request("POST", data_url, data=json.dumps(query), headers=data_headers)
+    response = resp.content
+    jsonResponse = json.loads(response.decode('utf-8'))
+    print(jsonResponse)
+    return jsonResponse
+    
+
+def add_user_auth(user):
+    query = {
+    "provider": "username",
+    "data": {
+    "username": user['user_name'],
+    "password": user['password']
+    }
+    }
+    resp = requests.request("POST", signup_url, data=json.dumps(query), headers=auth_headers)
+    response = resp.content
+    jsonResponse = json.loads(response.decode('utf-8'))
+    print(jsonResponse)
+    # print(jsonResponse['code'])
+    if('code' in jsonResponse):
+        return jsonResponse['message']
+    else:
+        auth_token= jsonResponse['auth_token']
+        username= jsonResponse['username']
+        print(auth_token)
+        return {'auth_token':auth_token,'username':username}
 
 
-@app.route('/robot.txt')
-def deny():
-    return "<h1>Request Denied</h1>"
-
-@app.route('/html')
-def html():
-    return render_template('mypage.html')
-
-
-@app.route('/input', methods=['GET', 'POST'])
-def input():
-    form = ReusableForm(request.form)
-    if request.method == 'POST':
-        name = request.form['name']
-        print("Entered Name==> "+name)
-    return render_template('login.html', form=form)
-
-#Group task code
 @app.route('/uploadImage', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
